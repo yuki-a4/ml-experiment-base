@@ -22,10 +22,13 @@
 | CV   | <スコア（± 標準偏差）> |
 | Public LB | <スコア / 未提出> |
 
-<必要に応じて図表を output/ から参照>
+### 診断プロット
+<!-- figures/ に保存した図を埋め込む。例: 特徴量重要度・混同行列・予測/実測分布・クラス別 recall など -->
+![feature importance](figures/feature_importance.png)
+![confusion matrix](figures/confusion_matrix.png)
 
 ## 考察
-<仮説は支持されたか。CV-LB の乖離。想定外の挙動や気づき。>
+<仮説は支持されたか。CV-LB の乖離。図から読み取れる気づき（誤分類の偏り・分布シフトなど）。>
 
 ## 次アクション
 <この結果を受けて次に試すこと。新しい Issue の種。>
