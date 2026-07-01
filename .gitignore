@@ -1,0 +1,26 @@
+# データ（Kaggle からダウンロードした生データはコミットしない）
+data/*
+!data/.gitkeep
+
+# output 配下は成果物置き場のため丸ごと管理対象外（OOF/submission/画像/中間生成物など）
+# フォルダ構造だけ残すため .gitkeep は追跡する
+exp/**/output/*
+!exp/**/output/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# 認証情報・秘密（誤コミット防止）
+kaggle.json
+**/kaggle.json
+.env
+*.pem
+credentials.json
+
+# その他
+.DS_Store
