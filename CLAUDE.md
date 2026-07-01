@@ -6,7 +6,13 @@
 > **コンペ開始時にやること**
 > 1. 下の「コンペ概要」を埋める（コンペ名・タスク種別・評価指標・target 列など）。
 > 2. `data/` にデータを取得する（例: `kaggle competitions download -c <competition>`）。
-> 3. exp0001（ベースライン）から実験を始める。
+> 3. Issue ラベルを用意する（テンプレートからの新リポジトリにはラベルがコピーされないため）:
+>    ```
+>    gh label create experiment --color 1D76DB --description "実験（submissionを生む）" --force
+>    gh label create eda        --color 0E8A16 --description "分析（EDA）" --force
+>    gh label create survey     --color 5319E7 --description "調査（外部/内部の調べもの）" --force
+>    ```
+> 4. exp0001（ベースライン）から実験を始める。
 
 ## コンペ概要
 
@@ -58,7 +64,8 @@
 
 1. **Issue を作成する（実験開始前に必須）**
    - GitHub の Issue に、実験番号・仮説・アプローチ・検証したいことを書いてから着手する。テンプレート: `.github/ISSUE_TEMPLATE/experiment.md`。
-   - `gh issue create --title "exp0001: <一言でわかる仮説>" --body "<仮説・手法・検証項目>"`
+   - **ラベルを付ける**（種別と一致）: 実験=`experiment` / 分析=`eda` / 調査=`survey`。自律実験モードでの絞り込みに使う。
+   - `gh issue create --title "exp0001: <一言でわかる仮説>" --body "<仮説・手法・検証項目>" --label experiment`
    - **例外**: リポジトリが GitHub 上で管理されていない（リモート未設定 / `gh` 未セットアップ・未認証）場合は Issue の作成・クローズは不要。
      その場合は REPORT.md と EXPERIMENT.md への記録で代替する。GitHub 連携が有効なときは必ず Issue を運用すること。
 2. **実験する**
