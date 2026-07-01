@@ -65,6 +65,7 @@
 1. **Issue を作成する（実験開始前に必須）**
    - GitHub の Issue に、実験番号・仮説・アプローチ・検証したいことを書いてから着手する。テンプレート: `.github/ISSUE_TEMPLATE/experiment.md`。
    - **ラベルを付ける**（種別と一致）: 実験=`experiment` / 分析=`eda` / 調査=`survey`。自律実験モードでの絞り込みに使う。
+     - 必要に応じて**他の軸のラベルを足してよい**（例: 優先度 `priority:high`、状態 `blocked`、モデル `model:lgbm`、バックログ `idea` など）。ただし軸を増やしすぎず**最小限に保つ**こと。
    - `gh issue create --title "exp0001: <一言でわかる仮説>" --body "<仮説・手法・検証項目>" --label experiment`
    - **例外**: リポジトリが GitHub 上で管理されていない（リモート未設定 / `gh` 未セットアップ・未認証）場合は Issue の作成・クローズは不要。
      その場合は REPORT.md と EXPERIMENT.md への記録で代替する。GitHub 連携が有効なときは必ず Issue を運用すること。
