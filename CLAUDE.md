@@ -11,6 +11,9 @@
 >    gh label create experiment --color 1D76DB --description "実験（submissionを生む）" --force
 >    gh label create eda        --color 0E8A16 --description "分析（EDA）" --force
 >    gh label create survey     --color 5319E7 --description "調査（外部/内部の調べもの）" --force
+>    gh label create "priority:high"   --color B60205 --description "優先度：高" --force
+>    gh label create "priority:medium" --color FBCA04 --description "優先度：中" --force
+>    gh label create "priority:low"    --color 0E8A16 --description "優先度：低" --force
 >    ```
 > 4. exp0001（ベースライン）から実験を始める。
 
@@ -64,8 +67,9 @@
 
 1. **Issue を作成する（実験開始前に必須）**
    - GitHub の Issue に、実験番号・仮説・アプローチ・検証したいことを書いてから着手する。テンプレート: `.github/ISSUE_TEMPLATE/experiment.md`。
-   - **ラベルを付ける**（種別と一致）: 実験=`experiment` / 分析=`eda` / 調査=`survey`。自律実験モードでの絞り込みに使う。
-     - 必要に応じて**他の軸のラベルを足してよい**（例: 優先度 `priority:high`、状態 `blocked`、モデル `model:lgbm`、バックログ `idea` など）。ただし軸を増やしすぎず**最小限に保つ**こと。
+   - **種別ラベルを付ける**（REPORT の種別と一致）: 実験=`experiment` / 分析=`eda` / 調査=`survey`。
+   - **優先度ラベルを付ける**: `priority:high` / `priority:medium` / `priority:low`。自律実験モードでは、まず高優先度の Issue から着手する。
+     - さらに必要なら**他の軸のラベルを足してよい**（例: 状態 `blocked`、モデル `model:lgbm`、バックログ `idea` など）。ただし軸を増やしすぎず**最小限に保つ**こと。
    - `gh issue create --title "exp0001: <一言でわかる仮説>" --body "<仮説・手法・検証項目>" --label experiment`
    - **例外**: リポジトリが GitHub 上で管理されていない（リモート未設定 / `gh` 未セットアップ・未認証）場合は Issue の作成・クローズは不要。
      その場合は REPORT.md と EXPERIMENT.md への記録で代替する。GitHub 連携が有効なときは必ず Issue を運用すること。
@@ -84,7 +88,7 @@
 
 ユーザーから具体的な実験内容の指示がない場合は、**自律的に次の実験を決めて開始する**こと。
 
-1. まず **GitHub の Issue** を確認し、着手可能で有効そうな実験（未着手の仮説・TODO）を探す。
+1. まず **GitHub の Issue** を確認し、着手可能で有効そうな実験（未着手の仮説・TODO）を探す。**優先度ラベル（`priority:high` → `medium` → `low`）の高いものから選ぶ**。
 2. Issue に適当なものがなければ、**これまでの実験結果（EXPERIMENT.md / 各 REPORT.md / KNOWLEDGE.md）** を振り返り、
    スコア改善に効きそうな次の一手を検討する（例: 効いた特徴量の深掘り、CV-LB 乖離の調査、有望モデルのチューニング、アンサンブル）。
 3. 決めた実験について**必ず先に Issue を作成**してから（上記ライフサイクル 1）着手する。
