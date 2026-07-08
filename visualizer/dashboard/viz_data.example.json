@@ -1,0 +1,31 @@
+{
+  "exp": "exp0001",
+  "title": "LightGBM baseline",
+  "type": "実験",
+  "date": "2026-07-08",
+  "issue": 1,
+  "base_exp": null,
+  "metric": "AUC",
+  "cv_mean": 0.8231,
+  "cv_std": 0.0041,
+  "lb": 0.8195,
+  "fold_scores": [0.821, 0.826, 0.819, 0.825, 0.824],
+  "params": {
+    "learning_rate": 0.05,
+    "num_leaves": 31,
+    "n_estimators": 2000
+  },
+  "feature_importance": [
+    { "feature": "f_amount", "importance": 934.2 },
+    { "feature": "f_age", "importance": 812.7 },
+    { "feature": "f_category_te", "importance": 601.5 },
+    { "feature": "f_days_since_last", "importance": 588.0 },
+    { "feature": "f_count_30d", "importance": 402.9 }
+  ],
+  "subgroups": [
+    { "name": "category=A", "metric": 0.842, "n": 5231 },
+    { "name": "category=B", "metric": 0.798, "n": 3012 },
+    { "name": "category=C", "metric": 0.771, "n": 1187 }
+  ],
+  "notes": "ベースライン。カテゴリCで精度が落ちる傾向（サンプル数が少ないため要検証）。"
+}

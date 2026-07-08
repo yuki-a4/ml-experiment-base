@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>Experiment Visualizer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e2e2e2;
+    --panel: #f7f7f8;
+    --accent: #2563eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a;
+      --fg: #e8e8ea;
+      --muted: #9aa0a6;
+      --border: #2c2d31;
+      --panel: #1e1f23;
+      --accent: #5b8dfd;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  p.sub { color: var(--muted); margin: 0 0 20px; }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+  #dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+  #dropzone.dragover { border-color: var(--accent); color: var(--accent); }
+  #dropzone input { display: none; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; cursor: pointer; user-select: none; }
+  th:hover { color: var(--fg); }
+  tr:last-child td { border-bottom: none; }
+  .row-actions button {
+    background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px;
+  }
+  .row-actions button:hover { color: #dc2626; }
+  .empty { color: var(--muted); padding: 8px 2px; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+  .chart-box { overflow-x: auto; }
+  svg text { fill: var(--fg); font-size: 11px; }
+  .grid-line { stroke: var(--border); stroke-width: 1; }
+  .axis-label { fill: var(--muted); font-size: 10px; }
+  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  select, input[type="range"] { accent-color: var(--accent); }
+  select {
+    background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 8px; font-size: 13px;
+  }
+  .tag {
+    display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px;
+    border: 1px solid var(--border); color: var(--muted);
+  }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--fg); color: var(--bg);
+    padding: 4px 8px; border-radius: 6px; font-size: 12px; opacity: 0; transition: opacity .1s;
+    z-index: 10; white-space: nowrap;
+  }
+  .notes { white-space: pre-wrap; color: var(--fg); background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+  .params-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .kv { font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+  .kv b { color: var(--muted); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<h1>Experiment Visualizer</h1>
+<p class="sub">exp/expNNNN/figures/viz_data.json を読み込んで、実験を横断で比較する共通ダッシュボード。</p>
+
+<section>
+  <h2>1. データを読み込む</h2>
+  <div id="dropzone">
+    <div>viz_data.json をドラッグ＆ドロップ、またはクリックして選択（複数可）</div>
+    <input id="fileInput" type="file" accept=".json" multiple />
+  </div>
+</section>
+
+<section>
+  <h2>2. 読み込んだ実験</h2>
+  <div id="tableWrap"><p class="empty">まだ何も読み込まれていません。</p></div>
+</section>
+
+<section>
+  <h2>3. 比較</h2>
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h2 style="font-size:13px;color:var(--muted)">CV vs LB</h2>
+      <div id="scatterChart"></div>
+    </div>
+    <div class="chart-box">
+      <h2 style="font-size:13px;color:var(--muted)">CV スコア（誤差 = fold 標準偏差）</h2>
+      <div id="barChart"></div>
+    </div>
+  </div>
+  <div class="chart-box" style="margin-top:16px;">
+    <h2 style="font-size:13px;color:var(--muted)">Fold ごとのスコア</h2>
+    <div id="foldChart"></div>
+  </div>
+</section>
+
+<section>
+  <h2>4. 詳細（1 実験にフォーカス）</h2>
+  <div class="controls">
+    <label>実験: <select id="detailSelect"></select></label>
+    <label>特徴量重要度 上位: <input id="topNSlider" type="range" min="3" max="40" value="15" /> <span id="topNValue">15</span> 件</label>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h2 style="font-size:13px;color:var(--muted)">Feature Importance</h2>
+      <div id="featChart"></div>
+    </div>
+    <div class="chart-box">
+      <h2 style="font-size:13px;color:var(--muted)">サブ集団別スコア</h2>
+      <div id="subgroupChart"></div>
+    </div>
+  </div>
+  <div id="detailMeta"></div>
+</section>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+const PALETTE = ["#2563eb","#dc2626","#059669","#d97706","#7c3aed","#0891b2","#db2777","#65a30d","#4f46e5","#ea580c"];
+
+const state = {
+  experiments: new Map(), // exp id -> {data, color, checked}
+  sortKey: "exp",
+  sortDir: 1,
+};
+
+const tooltip = document.getElementById("tooltip");
+function showTooltip(evt, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.left = (evt.clientX + 12) + "px";
+  tooltip.style.top = (evt.clientY + 12) + "px";
+  tooltip.style.opacity = 1;
+}
+function hideTooltip() { tooltip.style.opacity = 0; }
+
+function colorFor(index) { return PALETTE[index % PALETTE.length]; }
+
+function fmt(n, digits = 4) {
+  if (n === null || n === undefined || Number.isNaN(n)) return "-";
+  if (typeof n !== "number") return String(n);
+  return n.toFixed(digits);
+}
+
+function mean(arr) { return arr.reduce((a,b) => a+b, 0) / arr.length; }
+function std(arr) {
+  if (arr.length < 2) return 0;
+  const m = mean(arr);
+  return Math.sqrt(arr.reduce((a,b) => a + (b-m)**2, 0) / (arr.length - 1));
+}
+
+// ---------- ingest ----------
+function ingestFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data.exp) { alert(`${file.name}: "exp" フィールドがありません`); return; }
+      const idx = state.experiments.size;
+      const existing = state.experiments.get(data.exp);
+      state.experiments.set(data.exp, {
+        data,
+        color: existing ? existing.color : colorFor(idx),
+        checked: existing ? existing.checked : true,
+      });
+      renderAll();
+    } catch (e) {
+      alert(`${file.name} の読み込みに失敗しました: ${e.message}`);
+    }
+  };
+  reader.readAsText(file);
+}
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+dropzone.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", (e) => { [...e.target.files].forEach(ingestFile); fileInput.value = ""; });
+["dragenter","dragover"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+  e.preventDefault(); dropzone.classList.add("dragover");
+}));
+["dragleave","drop"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+  e.preventDefault(); dropzone.classList.remove("dragover");
+}));
+dropzone.addEventListener("drop", (e) => {
+  [...e.dataTransfer.files].filter(f => f.name.endsWith(".json")).forEach(ingestFile);
+});
+
+// ---------- table ----------
+const COLUMNS = [
+  { key: "exp", label: "exp" },
+  { key: "type", label: "種別" },
+  { key: "title", label: "タイトル" },
+  { key: "date", label: "日付" },
+  { key: "cv_mean", label: "CV" },
+  { key: "cv_std", label: "±std" },
+  { key: "lb", label: "LB" },
+  { key: "gap", label: "LB-CV" },
+];
+
+function checkedList() {
+  return [...state.experiments.values()].filter(e => e.checked);
+}
+function allList() {
+  return [...state.experiments.values()];
+}
+
+function sortedList() {
+  const list = allList();
+  const key = state.sortKey;
+  list.sort((a, b) => {
+    const av = rowValue(a, key), bv = rowValue(b, key);
+    if (av === bv) return 0;
+    if (av === null || av === undefined) return 1;
+    if (bv === null || bv === undefined) return -1;
+    return (av > bv ? 1 : -1) * state.sortDir;
+  });
+  return list;
+}
+
+function rowValue(entry, key) {
+  const d = entry.data;
+  if (key === "gap") {
+    return (typeof d.lb === "number" && typeof d.cv_mean === "number") ? d.lb - d.cv_mean : null;
+  }
+  return d[key];
+}
+
+function renderTable() {
+  const wrap = document.getElementById("tableWrap");
+  if (state.experiments.size === 0) {
+    wrap.innerHTML = '<p class="empty">まだ何も読み込まれていません。</p>';
+    return;
+  }
+  const list = sortedList();
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  headRow.appendChild(document.createElement("th")); // checkbox col
+  COLUMNS.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col.label + (state.sortKey === col.key ? (state.sortDir === 1 ? " ▲" : " ▼") : "");
+    th.addEventListener("click", () => {
+      if (state.sortKey === col.key) state.sortDir *= -1; else { state.sortKey = col.key; state.sortDir = 1; }
+      renderTable();
+    });
+    headRow.appendChild(th);
+  });
+  headRow.appendChild(document.createElement("th"));
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  list.forEach(entry => {
+    const d = entry.data;
+    const tr = document.createElement("tr");
+
+    const cbTd = document.createElement("td");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = entry.checked;
+    cb.addEventListener("change", () => { entry.checked = cb.checked; renderAll(); });
+    cbTd.appendChild(cb);
+    tr.appendChild(cbTd);
+
+    COLUMNS.forEach(col => {
+      const td = document.createElement("td");
+      if (col.key === "exp") {
+        const dot = document.createElement("span");
+        dot.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:50%;background:${entry.color};margin-right:6px;`;
+        td.appendChild(dot);
+        td.appendChild(document.createTextNode(d.exp));
+      } else if (col.key === "type") {
+        const tag = document.createElement("span");
+        tag.className = "tag"; tag.textContent = d.type || "-";
+        td.appendChild(tag);
+      } else if (col.key === "cv_mean" || col.key === "lb" || col.key === "gap") {
+        td.textContent = fmt(rowValue(entry, col.key));
+      } else if (col.key === "cv_std") {
+        td.textContent = d.cv_std !== undefined ? fmt(d.cv_std) : "-";
+      } else {
+        td.textContent = d[col.key] ?? "-";
+      }
+      tr.appendChild(td);
+    });
+
+    const actionTd = document.createElement("td");
+    actionTd.className = "row-actions";
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "✕";
+    removeBtn.title = "削除";
+    removeBtn.addEventListener("click", () => { state.experiments.delete(d.exp); renderAll(); });
+    actionTd.appendChild(removeBtn);
+    tr.appendChild(actionTd);
+
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.innerHTML = "";
+  wrap.appendChild(table);
+}
+
+// ---------- generic svg chart helpers ----------
+function svg(tag, attrs = {}) {
+  const el = document.createElementNS(SVG_NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+
+function niceMax(v) {
+  if (v <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  return Math.ceil(v / p) * p;
+}
+
+function emptyMsg(container, msg) {
+  container.innerHTML = `<p class="empty">${msg}</p>`;
+}
+
+// Bar chart with optional error bars: items = [{label, value, error, color}]
+function renderBarChart(container, items, opts = {}) {
+  container.innerHTML = "";
+  if (items.length === 0) { emptyMsg(container, "データがありません（cv_mean を持つ実験をチェックしてください）"); return; }
+  const W = Math.max(360, items.length * 70), H = 240;
+  const padL = 46, padB = 60, padT = 14, padR = 14;
+  const maxV = niceMax(Math.max(...items.map(i => i.value + (i.error || 0))) * 1.15);
+  const minV = Math.min(0, Math.min(...items.map(i => i.value - (i.error || 0))));
+  const s = svg("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const plotH = H - padT - padB, plotW = W - padL - padR;
+  const y = v => padT + plotH - ((v - minV) / (maxV - minV)) * plotH;
+  // gridlines
+  for (let i = 0; i <= 4; i++) {
+    const v = minV + (maxV - minV) * i / 4;
+    const yy = y(v);
+    s.appendChild(svg("line", { x1: padL, x2: W - padR, y1: yy, y2: yy, class: "grid-line" }));
+    const t = svg("text", { x: padL - 8, y: yy + 3, "text-anchor": "end" });
+    t.textContent = fmt(v, 3); s.appendChild(t);
+  }
+  const bw = plotW / items.length;
+  items.forEach((it, i) => {
+    const cx = padL + bw * i + bw / 2;
+    const barW = Math.min(36, bw * 0.55);
+    const yTop = y(it.value), yBase = y(Math.max(0, minV));
+    const rect = svg("rect", {
+      x: cx - barW / 2, y: Math.min(yTop, yBase), width: barW, height: Math.abs(yBase - yTop),
+      fill: it.color, rx: 3, opacity: 0.9,
+    });
+    rect.addEventListener("mousemove", (e) => showTooltip(e, `<b>${it.label}</b><br>${fmt(it.value)}${it.error ? " ± " + fmt(it.error) : ""}`));
+    rect.addEventListener("mouseleave", hideTooltip);
+    s.appendChild(rect);
+    if (it.error) {
+      const yE1 = y(it.value - it.error), yE2 = y(it.value + it.error);
+      s.appendChild(svg("line", { x1: cx, x2: cx, y1: yE1, y2: yE2, stroke: "#00000066", "stroke-width": 1.5 }));
+      s.appendChild(svg("line", { x1: cx - 5, x2: cx + 5, y1: yE1, y2: yE1, stroke: "#00000066", "stroke-width": 1.5 }));
+      s.appendChild(svg("line", { x1: cx - 5, x2: cx + 5, y1: yE2, y2: yE2, stroke: "#00000066", "stroke-width": 1.5 }));
+    }
+    const lbl = svg("text", { x: cx, y: H - padB + 16, "text-anchor": "middle" });
+    lbl.textContent = it.label.length > 10 ? it.label.slice(0, 9) + "…" : it.label;
+    s.appendChild(lbl);
+  });
+  container.appendChild(s);
+}
+
+// Scatter chart: points = [{x,y,label,color}]
+function renderScatterChart(container, points, opts = {}) {
+  container.innerHTML = "";
+  if (points.length === 0) { emptyMsg(container, "データがありません（cv_mean と lb の両方を持つ実験をチェックしてください）"); return; }
+  const W = 420, H = 260, pad = 46;
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const lo = Math.min(...xs, ...ys) , hi = Math.max(...xs, ...ys);
+  const margin = (hi - lo) * 0.12 || 0.01;
+  const min = lo - margin, max = hi + margin;
+  const s = svg("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const plot = v => pad + (1 - (v - min) / (max - min)) * (H - 2 * pad);
+  const plotX = v => pad + ((v - min) / (max - min)) * (W - 2 * pad);
+  // diagonal (CV == LB)
+  s.appendChild(svg("line", { x1: plotX(min), y1: plot(min), x2: plotX(max), y2: plot(max), class: "grid-line", "stroke-dasharray": "4,4" }));
+  // axes
+  s.appendChild(svg("line", { x1: pad, y1: H - pad, x2: W - pad, y2: H - pad, class: "grid-line" }));
+  s.appendChild(svg("line", { x1: pad, y1: pad, x2: pad, y2: H - pad, class: "grid-line" }));
+  const xlab = svg("text", { x: W / 2, y: H - 8, "text-anchor": "middle", class: "axis-label" }); xlab.textContent = "CV"; s.appendChild(xlab);
+  const ylab = svg("text", { x: 12, y: H / 2, "text-anchor": "middle", class: "axis-label", transform: `rotate(-90 12 ${H/2})` }); ylab.textContent = "LB"; s.appendChild(ylab);
+  points.forEach(p => {
+    const c = svg("circle", { cx: plotX(p.x), cy: plot(p.y), r: 6, fill: p.color, stroke: "var(--bg)", "stroke-width": 1.5 });
+    c.addEventListener("mousemove", (e) => showTooltip(e, `<b>${p.label}</b><br>CV ${fmt(p.x)} / LB ${fmt(p.y)}`));
+    c.addEventListener("mouseleave", hideTooltip);
+    s.appendChild(c);
+  });
+  container.appendChild(s);
+}
+
+// Multi-line fold chart: series = [{label, color, values:[..]}]
+function renderFoldChart(container, series) {
+  container.innerHTML = "";
+  const withFolds = series.filter(s => Array.isArray(s.values) && s.values.length);
+  if (withFolds.length === 0) { emptyMsg(container, "fold_scores を持つ実験がありません"); return; }
+  const W = Math.max(420, withFolds.length ? Math.max(...withFolds.map(s => s.values.length)) * 70 : 420), H = 240;
+  const padL = 46, padB = 30, padT = 14, padR = 14;
+  const allVals = withFolds.flatMap(s => s.values);
+  const maxV = Math.max(...allVals) * 1.05, minV = Math.min(...allVals) * 0.95;
+  const nFold = Math.max(...withFolds.map(s => s.values.length));
+  const s_ = svg("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const plotH = H - padT - padB, plotW = W - padL - padR;
+  const y = v => padT + plotH - ((v - minV) / (maxV - minV || 1)) * plotH;
+  const x = i => padL + (nFold <= 1 ? plotW / 2 : (plotW * i) / (nFold - 1));
+  for (let i = 0; i <= 4; i++) {
+    const v = minV + (maxV - minV) * i / 4;
+    const yy = y(v);
+    s_.appendChild(svg("line", { x1: padL, x2: W - padR, y1: yy, y2: yy, class: "grid-line" }));
+    const t = svg("text", { x: padL - 8, y: yy + 3, "text-anchor": "end" }); t.textContent = fmt(v, 3); s_.appendChild(t);
+  }
+  for (let i = 0; i < nFold; i++) {
+    const t = svg("text", { x: x(i), y: H - padB + 16, "text-anchor": "middle" }); t.textContent = "fold " + i; s_.appendChild(t);
+  }
+  withFolds.forEach(sr => {
+    const pts = sr.values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+    s_.appendChild(svg("polyline", { points: pts, fill: "none", stroke: sr.color, "stroke-width": 2 }));
+    sr.values.forEach((v, i) => {
+      const c = svg("circle", { cx: x(i), cy: y(v), r: 3.5, fill: sr.color });
+      c.addEventListener("mousemove", (e) => showTooltip(e, `<b>${sr.label}</b><br>fold ${i}: ${fmt(v)}`));
+      c.addEventListener("mouseleave", hideTooltip);
+      s_.appendChild(c);
+    });
+  });
+  container.appendChild(s_);
+}
+
+// Horizontal bar chart for feature importance / subgroups: items=[{label,value}]
+function renderHBarChart(container, items, color) {
+  container.innerHTML = "";
+  if (items.length === 0) { emptyMsg(container, "データがありません"); return; }
+  const rowH = 22, padL = 140, padR = 50, padT = 10, padB = 10;
+  const W = 460, H = padT + padB + items.length * rowH;
+  const maxV = niceMax(Math.max(...items.map(i => i.value)) * 1.1);
+  const s = svg("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const plotW = W - padL - padR;
+  items.forEach((it, i) => {
+    const yy = padT + i * rowH;
+    const barW = (it.value / maxV) * plotW;
+    const lbl = svg("text", { x: padL - 8, y: yy + rowH / 2 + 4, "text-anchor": "end" });
+    lbl.textContent = it.label.length > 18 ? it.label.slice(0, 17) + "…" : it.label;
+    s.appendChild(lbl);
+    const rect = svg("rect", { x: padL, y: yy + 3, width: Math.max(1, barW), height: rowH - 8, fill: color, rx: 3, opacity: 0.9 });
+    rect.addEventListener("mousemove", (e) => showTooltip(e, `<b>${it.label}</b><br>${fmt(it.value, 2)}${it.n !== undefined ? " (n=" + it.n + ")" : ""}`));
+    rect.addEventListener("mouseleave", hideTooltip);
+    s.appendChild(rect);
+    const vlbl = svg("text", { x: padL + Math.max(1, barW) + 6, y: yy + rowH / 2 + 4 });
+    vlbl.textContent = fmt(it.value, 2);
+    s.appendChild(vlbl);
+  });
+  container.appendChild(s);
+}
+
+// ---------- render orchestration ----------
+function renderComparisonCharts() {
+  const checked = checkedList();
+  renderScatterChart(
+    document.getElementById("scatterChart"),
+    checked.filter(e => typeof e.data.cv_mean === "number" && typeof e.data.lb === "number")
+      .map(e => ({ x: e.data.cv_mean, y: e.data.lb, label: e.data.exp, color: e.color }))
+  );
+  renderBarChart(
+    document.getElementById("barChart"),
+    checked.filter(e => typeof e.data.cv_mean === "number")
+      .map(e => ({ label: e.data.exp, value: e.data.cv_mean, error: e.data.cv_std || 0, color: e.color }))
+  );
+  renderFoldChart(
+    document.getElementById("foldChart"),
+    checked.map(e => ({ label: e.data.exp, color: e.color, values: e.data.fold_scores }))
+  );
+}
+
+function renderDetailControls() {
+  const select = document.getElementById("detailSelect");
+  const prev = select.value;
+  select.innerHTML = "";
+  allList().forEach(e => {
+    const opt = document.createElement("option");
+    opt.value = e.data.exp; opt.textContent = e.data.exp;
+    select.appendChild(opt);
+  });
+  if ([...select.options].some(o => o.value === prev)) select.value = prev;
+}
+
+function renderDetail() {
+  const select = document.getElementById("detailSelect");
+  const entry = state.experiments.get(select.value);
+  const topN = parseInt(document.getElementById("topNSlider").value, 10);
+  document.getElementById("topNValue").textContent = topN;
+
+  const featContainer = document.getElementById("featChart");
+  const subContainer = document.getElementById("subgroupChart");
+  const meta = document.getElementById("detailMeta");
+
+  if (!entry) {
+    emptyMsg(featContainer, "実験を読み込んでください");
+    emptyMsg(subContainer, "実験を読み込んでください");
+    meta.innerHTML = "";
+    return;
+  }
+  const d = entry.data;
+
+  const fi = Array.isArray(d.feature_importance) ? [...d.feature_importance] : [];
+  fi.sort((a, b) => b.importance - a.importance);
+  renderHBarChart(featContainer, fi.slice(0, topN).map(f => ({ label: f.feature, value: f.importance })), entry.color);
+
+  const sg = Array.isArray(d.subgroups) ? [...d.subgroups] : [];
+  sg.sort((a, b) => b.metric - a.metric);
+  renderHBarChart(subContainer, sg.map(g => ({ label: g.name, value: g.metric, n: g.n })), entry.color);
+
+  const params = d.params && typeof d.params === "object"
+    ? Object.entries(d.params).map(([k, v]) => `<span class="kv"><b>${k}</b>=${v}</span>`).join("")
+    : "";
+  meta.innerHTML = `
+    ${params ? `<div class="params-list">${params}</div>` : ""}
+    ${d.notes ? `<div class="notes">${d.notes.replace(/</g,"&lt;")}</div>` : ""}
+  `;
+}
+
+function renderAll() {
+  renderTable();
+  renderComparisonCharts();
+  renderDetailControls();
+  renderDetail();
+}
+
+document.getElementById("topNSlider").addEventListener("input", renderDetail);
+document.getElementById("detailSelect").addEventListener("change", renderDetail);
+
+renderAll();
+</script>
+</body>
+</html>

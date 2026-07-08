@@ -55,6 +55,8 @@
 │   └── ISSUE_TEMPLATE/
 │       └── experiment.md   # 実験 Issue のテンプレート（GitHub 機能）
 ├── data/              # コンペのデータ（train/test/sample_submission など）
+├── visualizer/        # 実験結果を横断で見る共通ビジュアライザー（詳細: visualizer/README.md）
+│   └── dashboard/      # 標準の比較ダッシュボード（index.html を開くだけ）
 └── exp/
     ├── _template/     # 新実験の雛形。これをコピーして expNNNN を作る
     │   ├── src/
@@ -64,7 +66,7 @@
     ├── exp0001/
     │   ├── src/       # ソースコード
     │   ├── output/    # OOF・submission・中間生成物など（git 管理外）
-    │   ├── figures/   # REPORT/Issue に載せる確定プロット（git 追跡）
+    │   ├── figures/   # REPORT/Issue に載せる確定プロット + viz_data.json（git 追跡）
     │   └── REPORT.md  # この実験の仮説・手法・結果のまとめ
     ├── exp0002/
     └── ...
@@ -78,9 +80,10 @@
 - `exp/expNNNN/` … **1 フォルダ 1 テーマ**。番号は `exp0001` から連番で採番する。
   - `src/` … そのソースコード。**notebook(`.ipynb`)と `.py` は用途に応じて使い分けてよい**（探索的な EDA・可視化は notebook、再現性・再実行が要る学習/推論パイプラインは `.py` が向く）。どちらも `src/` に置く。
   - `output/` … OOF 予測、submission ファイル、学習過程で出力する中間生成物、探索中の雑多な画像など（**git 管理外**）。
-  - `figures/` … REPORT/Issue に載せる**確定プロット**を保存する（**git 追跡**）。GitHub 上でレンダリングさせたい図はここに置く。
+  - `figures/` … REPORT/Issue に載せる**確定プロット**と `viz_data.json`（後述）を保存する（**git 追跡**）。GitHub 上でレンダリングさせたい図はここに置く。
   - **exp は「実験」だけでなく「分析(EDA)」「調査」も対象**。submission を生まない作業（データの分布調査、CV-LB 乖離の原因調査、上位解法の比較調査など）も exp として残す。
     REPORT.md 冒頭の **`種別`** に `実験 / 分析(EDA) / 調査` を明記する。分析・調査では CV/LB 欄は「-」でよい。得られた結論は必ず KNOWLEDGE.md に反映する。
+- `visualizer/` … 実験結果を可視化する**共通ビジュアライザー**。**実験ごとに HTML を作らない** —— 各実験は `figures/viz_data.json` にデータだけを出力し、可視化は常に `visualizer/dashboard/index.html`（ブラウザで直接開くだけ、ビルド不要）で行う。スライダー・チェックボックスで表示件数や比較対象を絞り込みながら、CV/LB・fold ばらつき・feature importance・サブ集団別スコアなどを実験横断で比較できる。見せ方が増えたら `visualizer/<name>/` を新設してよい（既存のものは変更せず併存）。データ契約（フィールド定義）は `visualizer/dashboard/viz_data.example.json` と `visualizer/README.md` を参照。
 
 ## 実験のライフサイクル（必ずこの順で行う）
 
@@ -98,6 +101,7 @@
    - `exp/expNNNN/src/` にコードを置き、`exp/expNNNN/output/` に成果物を出力する。
 3. **REPORT.md を書く**
    - 実験終了後、`exp/expNNNN/REPORT.md`（`_template` の雛形ベース）に仮説・手法・結果・考察・次アクションをまとめる。Issue と同じ枠を埋める形で転記する。
+   - あわせて `exp/expNNNN/figures/viz_data.json` を出力する（フォーマットは `visualizer/dashboard/viz_data.example.json` 参照）。共通ビジュアライザー（`visualizer/dashboard/index.html`）で他実験と比較できるようにするため、CV/LB・fold スコア・feature importance・サブ集団別スコアなど残っているものを詰める（フィールドは任意。無いものは書かなくてよい）。
 4. **EXPERIMENT.md に追記する**
    - 下記フォーマットの表に 1 行追記する。
 5. **KNOWLEDGE.md を更新する**
