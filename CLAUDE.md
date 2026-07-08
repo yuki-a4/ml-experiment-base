@@ -83,7 +83,7 @@
   - `figures/` … REPORT/Issue に載せる**確定プロット**と `viz_data.json`（後述）を保存する（**git 追跡**）。GitHub 上でレンダリングさせたい図はここに置く。
   - **exp は「実験」だけでなく「分析(EDA)」「調査」も対象**。submission を生まない作業（データの分布調査、CV-LB 乖離の原因調査、上位解法の比較調査など）も exp として残す。
     REPORT.md 冒頭の **`種別`** に `実験 / 分析(EDA) / 調査` を明記する。分析・調査では CV/LB 欄は「-」でよい。得られた結論は必ず KNOWLEDGE.md に反映する。
-- `visualizer/` … 実験結果を可視化する**共通ビジュアライザー**。**実験ごとに HTML を作らない** —— 各実験は `figures/viz_data.json` にデータだけを出力し、可視化は常に `visualizer/dashboard/index.html`（ブラウザで直接開くだけ、ビルド不要）で行う。スライダー・チェックボックスで表示件数や比較対象を絞り込みながら、CV/LB・fold ばらつき・feature importance・サブ集団別スコアなどを実験横断で比較できる。見せ方が増えたら `visualizer/<name>/` を新設してよい（既存のものは変更せず併存）。データ契約（フィールド定義）は `visualizer/dashboard/viz_data.example.json` と `visualizer/README.md` を参照。
+- `visualizer/` … 実験結果を可視化する**共通ビジュアライザー**の置き場。**運用ルールは `visualizer/README.md` に定める。この配下を操作するときは必ずそれに従うこと**（実験ごとに HTML を作らない、等）。現時点では実験横断の比較ダッシュボード `dashboard/` がある。個別実験の予測結果を深掘りするエラー分析用ツールは、タスクが決まってから別ディレクトリとして追加してよい（詳細は README 参照）。
 
 ## 実験のライフサイクル（必ずこの順で行う）
 
