@@ -82,7 +82,7 @@
    - **作成前に既存の Issue を確認し、重複を作らない**。`gh issue list --state all --search "<キーワード>"` 等で open/closed を検索し、同じ内容の Issue が既にあればそれを使う（再開する場合は該当 Issue を reopen）。似た Issue があれば新規作成せずコメントで追記する。
    - GitHub の Issue に、実験番号・仮説・アプローチ・検証したいことを書いてから着手する。テンプレート: `.github/ISSUE_TEMPLATE/experiment.md`。
    - **種別ラベルを付ける**（REPORT の種別と一致）: 実験=`experiment` / 分析=`eda` / 調査=`survey`。
-   - **優先度ラベルを付ける**: `priority:high` / `priority:medium` / `priority:low`。自律実験モードでは、まず高優先度の Issue から着手する。
+   - **優先度ラベルを付ける**: `priority:critical` / `priority:high` / `priority:medium` / `priority:low` / `priority:backlog`。自律実験モードでは、まず高優先度の Issue から着手する。
      - さらに必要なら**他の軸のラベルを足してよい**（例: 状態 `blocked`、モデル `model:lgbm`、バックログ `idea` など）。ただし軸を増やしすぎず**最小限に保つ**こと。
    - `gh issue create --title "exp0001: <一言でわかる仮説>" --body "<仮説・手法・検証項目>" --label experiment`
    - **例外**: リポジトリが GitHub 上で管理されていない（リモート未設定 / `gh` 未セットアップ・未認証）場合は Issue の作成・クローズは不要。
@@ -105,7 +105,7 @@
 
 ユーザーから具体的な実験内容の指示がない場合は、**自律的に次の実験を決めて開始する**こと。
 
-1. まず **GitHub の Issue** を確認し、着手可能で有効そうな実験（未着手の仮説・TODO）を探す。**優先度ラベル（`priority:high` → `medium` → `low`）の高いものから選ぶ**。
+1. まず **GitHub の Issue** を確認し、着手可能で有効そうな実験（未着手の仮説・TODO）を探す。**優先度ラベル（`priority:critical` → `high` → `medium` → `low` → `backlog`）の高いものから選ぶ**。
 2. Issue に適当なものがなければ、**これまでの実験結果（EXPERIMENT.md / 各 REPORT.md / KNOWLEDGE.md）** を振り返り、
    スコア改善に効きそうな次の一手を検討する（例: 効いた特徴量の深掘り、CV-LB 乖離の調査、有望モデルのチューニング、アンサンブル）。
 3. 決めた実験について**必ず先に Issue を作成**してから（上記ライフサイクル 1）着手する。

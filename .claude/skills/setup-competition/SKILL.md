@@ -57,9 +57,11 @@ CLAUDE.md の「## コンペ概要」節を、**事実のみ**で埋める。考
 gh label create experiment --color 1D76DB --description "実験（submissionを生む）" --force
 gh label create eda        --color 0E8A16 --description "分析（EDA）" --force
 gh label create survey     --color 5319E7 --description "調査（外部/内部の調べもの）" --force
-gh label create "priority:high"   --color B60205 --description "優先度：高" --force
-gh label create "priority:medium" --color FBCA04 --description "優先度：中" --force
-gh label create "priority:low"    --color 0E8A16 --description "優先度：低" --force
+gh label create "priority:critical" --color B60205 --description "優先度：最重要・緊急" --force
+gh label create "priority:high"     --color D93F0B --description "優先度：高" --force
+gh label create "priority:medium"   --color FBCA04 --description "優先度：中" --force
+gh label create "priority:low"      --color 0E8A16 --description "優先度：低" --force
+gh label create "priority:backlog"  --color C5DEF5 --description "優先度：バックログ（着手未定のアイデア）" --force
 ```
 
 ## 5. exp0001（ベースライン）から実験を始める
