@@ -17,19 +17,7 @@
 - **粘る（安易に棄却しない）**: 精度を上げうる仮説は「少し試して差が出ない→棄却」で終わらせない。要因分解して角度を変えた別の問いに立て直し、レバーがあるか粘り強く探る。ただし**同じ手の再投入は「粘り」ではない**。
 - **撤退にも機序を要求する**: 粘っても改善しないときの成果物は「ダメでした」ではなく、予測結果（pred-vs-GT・残差・サブ集団別・失敗サンプル）を見た深い考察とする。**「なぜレバーが無いのか」を機序で説明できて初めて撤退してよい**（例: exp0023 の「apo→MT にレバー無し」）。撤退の結論も KNOWLEDGE.md に残す。
 
-> **コンペ開始時にやること**
-> 1. 下の「コンペ概要」を埋める（コンペ名・タスク種別・評価指標・target 列など）。
-> 2. `data/` にデータを取得する（例: `kaggle competitions download -c <competition>`）。
-> 3. Issue ラベルを用意する（テンプレートからの新リポジトリにはラベルがコピーされないため）:
->    ```
->    gh label create experiment --color 1D76DB --description "実験（submissionを生む）" --force
->    gh label create eda        --color 0E8A16 --description "分析（EDA）" --force
->    gh label create survey     --color 5319E7 --description "調査（外部/内部の調べもの）" --force
->    gh label create "priority:high"   --color B60205 --description "優先度：高" --force
->    gh label create "priority:medium" --color FBCA04 --description "優先度：中" --force
->    gh label create "priority:low"    --color 0E8A16 --description "優先度：低" --force
->    ```
-> 4. exp0001（ベースライン）から実験を始める。
+> **コンペ開始時にやること**: `/setup-competition <コンペ名/URL/slug>` skill を使う（データ取得・コンペ概要の記入・解説 HTML の作成・Issue ラベル作成・exp0001 着手までを案内する）。詳細手順は `.claude/skills/setup-competition/SKILL.md`。
 
 ## コンペ概要
 
@@ -55,6 +43,8 @@
 │   └── ISSUE_TEMPLATE/
 │       └── experiment.md   # 実験 Issue のテンプレート（GitHub 機能）
 ├── data/              # コンペのデータ（train/test/sample_submission など）
+├── docs/
+│   └── competition_overview.html  # コンペ解説（`/setup-competition` skill が生成）
 ├── visualizer/        # 実験結果を横断で見る共通ビジュアライザー（運用ルール: .claude/rules/visualizer.md）
 └── exp/
     ├── _template/     # 新実験の雛形。これをコピーして expNNNN を作る
@@ -76,6 +66,7 @@
 - **1 つの実験の途中でも、テーマが枝分かれして独立に測るべき問いになったら、新しく `expNNNN` を採番してよい**。無理に 1 フォルダへ詰め込まず、1 フォルダ 1 テーマを保つ。
 
 - `data/` … データ置き場。生データはリポジトリにコミットしない（`.gitignore` 参照）。
+- `docs/` … コンペ全体に関わる資料置き場。`competition_overview.html` はコンペの概要・target 分布・データの特徴などを 1 枚にまとめた解説（git 追跡）。
 - `exp/expNNNN/` … **1 フォルダ 1 テーマ**。番号は `exp0001` から連番で採番する。
   - `src/` … そのソースコード。**notebook(`.ipynb`)と `.py` は用途に応じて使い分けてよい**（探索的な EDA・可視化は notebook、再現性・再実行が要る学習/推論パイプラインは `.py` が向く）。どちらも `src/` に置く。
   - `output/` … OOF 予測、submission ファイル、学習過程で出力する中間生成物、探索中の雑多な画像など（**git 管理外**）。
