@@ -2,10 +2,15 @@
 data/*
 !data/.gitkeep
 
-# output 配下は成果物置き場のため丸ごと管理対象外（OOF/submission/画像/中間生成物など）
+# output 配下は成果物置き場のため原則管理対象外（submission/画像/中間生成物など）
 # フォルダ構造だけ残すため .gitkeep は追跡する
 exp/**/output/*
 !exp/**/output/.gitkeep
+# 例外: OOF 予測は後段のアンサンブル/スタッキングで再利用する資産のため追跡する
+# （運用: OOF ファイルは oof_ で始める。大容量なら Git LFS を検討）
+!exp/**/output/oof_*.npy
+!exp/**/output/oof_*.csv
+!exp/**/output/oof_*.parquet
 
 # Python
 __pycache__/
