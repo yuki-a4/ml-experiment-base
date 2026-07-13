@@ -45,6 +45,7 @@
 ├── data/              # コンペのデータ（train/test/sample_submission など）
 ├── docs/
 │   └── competition_overview.html  # コンペ解説（`/setup-competition` skill が生成）
+├── survey/            # 外部情報源の調査記録。直下に索引 INDEX.md、情報ソースごとにサブフォルダ（運用ルール: .claude/rules/survey.md）
 ├── visualizer/        # 実験結果を横断で見る共通ビジュアライザー（運用ルール: .claude/rules/visualizer.md）
 └── exp/
     ├── _template/     # 新実験の雛形。これをコピーして expNNNN を作る
@@ -67,6 +68,7 @@
 
 - `data/` … データ置き場。生データはリポジトリにコミットしない（`.gitignore` 参照）。
 - `docs/` … コンペ全体に関わる資料置き場。`competition_overview.html` はコンペの概要・target 分布・データの特徴などを 1 枚にまとめた解説（git 追跡）。
+- `survey/` … **外部の情報源（上位解法・Discussion・論文・記事など）を調査したら、その記録をここに保存する**。直下の `INDEX.md` が索引、情報ソースごとにサブフォルダを切る。運用ルール: `.claude/rules/survey.md`。
 - `exp/expNNNN/` … **1 フォルダ 1 テーマ**。番号は `exp0001` から連番で採番する。
   - `src/` … そのソースコード。**notebook(`.ipynb`)と `.py` は用途に応じて使い分けてよい**（探索的な EDA・可視化は notebook、再現性・再実行が要る学習/推論パイプラインは `.py` が向く）。どちらも `src/` に置く。
   - `output/` … OOF 予測、submission ファイル、学習過程で出力する中間生成物、探索中の雑多な画像など。**原則 git 管理外**だが、**OOF 予測だけは例外として追跡する**（後段のアンサンブル/スタッキングで再利用する資産のため）。OOF ファイルは `oof_` で始める命名にすること（`.gitignore` の許可パターンに合わせる。例: `oof_exp0001.npy`）。大容量なら Git LFS を検討する。
