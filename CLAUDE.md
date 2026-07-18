@@ -52,6 +52,7 @@
 ├── docs/
 │   └── competition_overview.html  # コンペ解説（`/setup-competition` skill が生成）
 ├── survey/            # 外部情報源の調査記録。直下に索引 INDEX.md、情報ソースごとにサブフォルダ（運用ルール: .claude/rules/survey.md）
+├── handoff/           # セッション切替時の引継ぎドキュメント（運用ルール: .claude/rules/handoff.md）
 ├── visualizer/        # 実験結果を横断で見る共通ビジュアライザー（運用ルール: .claude/rules/visualizer.md）
 └── exp/
     ├── _template/     # 新実験の雛形。これをコピーして expNNNN を作る
@@ -82,6 +83,7 @@
   - **exp は「実験」だけでなく「分析(EDA)」「調査」も対象**。submission を生まない作業（データの分布調査、CV-LB 乖離の原因調査、上位解法の比較調査など）も exp として残す。
     REPORT.md 冒頭の **`種別`** に `実験 / 分析(EDA) / 調査` を明記する。分析・調査では CV/LB 欄は「-」でよい。得られた結論は必ず KNOWLEDGE.md に反映する。
 - `visualizer/` … 実験結果を可視化する**共通ビジュアライザー**の置き場。運用ルールは `.claude/rules/visualizer.md`。
+- `handoff/` … セッションを切り替えるとき、ユーザーの指示で次セッションへの引継ぎドキュメントを置く。運用ルール: `.claude/rules/handoff.md`。
 
 ## 実験のライフサイクル（必ずこの順で行う）
 
